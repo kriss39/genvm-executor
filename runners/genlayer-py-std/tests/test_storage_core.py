@@ -2,9 +2,11 @@ import pytest
 from genlayer.storage._internal.generate import _BuilderCtx, _storage_build
 from genlayer.storage.core import (
 	ROOT_SLOT_ID,
+	SLOT_SIZE,
 	VLA,
 	Indirection,
 	InmemManager,
+	check_slot_access,
 )
 from genlayer.types import u32
 
@@ -158,3 +160,41 @@ def test_indirection_slot():
 	ind = new_indirection()
 	s = ind.slot()
 	assert s is not None
+
+
+# === Slot bounds ===
+
+
+def new_slot():
+	return InmemManager().get_store_slot(ROOT_SLOT_ID)
+
+
+@pytest.mark.parametrize('off, size', [(0, 4), (SLOT_SIZE - 4, 4), (SLOT_SIZE, 0)])
+def test_check_slot_access_fits(off: int, size: int):
+	check_slot_access(off, size)
+
+
+def test_slot_access_in_range():
+	slot = new_slot()
+	slot.write(8, b'\x01' * 4)
+	assert slot.read(8, 4) == b'\x01' * 4
+
+
+@pytest.mark.parametrize(
+	'off, size',
+	[
+		(SLOT_SIZE, 1),
+		(SLOT_SIZE - 3, 4),
+		(SLOT_SIZE + 5, 4),
+		(2**40 + 7, 4),
+		(-1, 4),
+		(0, -1),
+	],
+)
+def test_slot_access_out_of_range(off: int, size: int):
+	slot = new_slot()
+	with pytest.raises(OverflowError):
+		slot.read(off, size)
+	if size >= 0:
+		with pytest.raises(OverflowError):
+			slot.write(off, b'\x01' * size)

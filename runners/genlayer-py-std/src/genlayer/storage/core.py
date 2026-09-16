@@ -5,6 +5,27 @@ import typing
 
 from genlayer.types import u256
 
+SLOT_SIZE = 1 << 32
+"""
+Addressable bytes in a slot, as the executor defines it (``SLOT_SIZE``).
+"""
+
+
+def check_slot_access(off: int, len: int, /) -> None:
+	"""
+	Reject a slot access that does not fit in a slot.
+
+	Mirrors the executor's ``slot_access_fits`` check. The wasi shim takes the
+	offset as ``u32`` without an overflow check, so an out-of-range offset would
+	otherwise wrap and silently alias another location in the same slot.
+
+	:raises OverflowError: when ``[off, off + len)`` is not within ``[0, SLOT_SIZE]``
+	"""
+	if off < 0 or len < 0 or off + len > SLOT_SIZE:
+		raise OverflowError(
+			f'slot access [{off}, {off + len}) does not fit in {SLOT_SIZE} bytes'
+		)
+
 
 def slot_id_to_bytes(slot_id: u256 | bytes) -> bytes:
 	if isinstance(slot_id, int):
@@ -98,7 +119,9 @@ class Slot:
 		:param off: byte offset
 		:param len: number of bytes to read
 		:returns: bytes read
+		:raises OverflowError: when the range does not fit in the slot
 		"""
+		check_slot_access(off, len)
 		return self.manager.do_read(self.id, off, len)
 
 	def write(self, off: int, what: collections.abc.Buffer, /) -> None:
@@ -107,7 +130,9 @@ class Slot:
 
 		:param off: byte offset
 		:param what: data to write
+		:raises OverflowError: when the range does not fit in the slot
 		"""
+		check_slot_access(off, memoryview(what).nbytes)
 		return self.manager.do_write(self.id, off, what)
 
 	def as_int(self) -> u256:
