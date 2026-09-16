@@ -49,7 +49,7 @@ let
       };
 
       genlayer-std = {
-        hash = "sha256-n/ABVbRLtEvOi72uVspaLmjhe0c1T5+G6/q6CddGoqg=";
+        hash = "sha256-Mdgmg4SFbbBmvpM+IYhks5+o8cvxkmZh+WTfyMQsAlo=";
         depends = [
           top
         ];
@@ -83,7 +83,7 @@ let
     wrappers = {
       __prefix = "";
       py-genlayer = {
-        hash = "sha256-LLzIOJdExDIYUtLAtL/O8HKb/SJGfiqvDU0gTPbwFes=";
+        hash = "sha256-Y8M+lIs0v4YPeT5ZbJqkTa5PLvKBEzbpAj62TBKwpNw=";
         depends = [
           cpython
           pyLibs.cloudpickle
@@ -91,7 +91,7 @@ let
         ];
       };
       py-genlayer-multi = {
-        hash = "sha256-er0/qwaOCui+gDyVqhkux01dpNynwqWFufy1FbIYcOg=";
+        hash = "sha256-mzDpjPLqcpqTmiNDp2X/Xfd4KCMI7bIu2+wtK6MQwG0=";
         depends = [
           cpython
           pyLibs.cloudpickle
